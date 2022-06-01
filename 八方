@@ -1,0 +1,182 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+#include <algorithm>				//sort
+
+using namespace std;
+
+
+struct move{										//方位值 
+	int a, b;
+};
+
+ void move_create(move a[])
+ {																				//方向值輸入 
+	int rea[8][2] = { {-1,0} , {-1,1} , {0,1} , {1,1} , {1,0} , {1,-1} , {0,-1} , {-1,-1} };
+	
+	for (int i=0 ; i<8 ; i++){
+		a[i].a=rea[i][0];
+		a[i].b=rea[i][1];
+	}
+}
+
+class item{
+public:										//站存方位和位置用 
+	int a, b, dir;
+	item():a(0),b(0),dir(0){};
+	item(int y,int x,int d):a(y),b(x),dir(d){};
+};
+
+template<class T>
+class StackNode
+{
+	public:
+		T data ;
+		StackNode *link ;
+		StackNode():data() ,link(0) {};	
+};
+
+template<class T>
+class Stack
+{
+	private:
+		StackNode<T> *First ;
+		StackNode<T> *List ;
+		int size;
+	public:
+		Stack():First(0) ,List(0) ,size(0){}; 
+		void push(T x);
+		T pop();
+		int sizeOutput() {return size ;};	
+};
+
+
+int main(){
+	srand(time(0));
+	move dir[8];
+	move_create(dir); 																//創方向值 
+	int x, y, d, size[5] = {100,200,300,400,500}, p[5] = {20,40,60,80,90} ;
+	int success = 0 ;
+	
+	for(int n=0; n<5; n++)                                      //size
+	{	
+		cout<< "八方位迷宮size:" << size[n] << endl;
+																			
+		for(int c=0; c<5; c++)                                  //p
+		{
+			success = 0 ;
+			cout<<"  "<< p[c] << "%機率 :"  ;														
+			for(int k=0; k<1000; k++)
+			{	
+				Stack<item> stack ;
+				x = size[n]+2, y = x;
+				bool maze[y][x] , mark[y][x] ;
+					
+				for(int i=0 ; i < y ;i++)											//創迷宮 
+					for(int j=0 ; j < x ;j++)
+						{
+							if(i==0 || j==0 || i == y-1 || j == x-1)
+								maze[i][j] = 1 , mark[i][j] = 1;	
+							
+							else
+							{
+								if(p[c] >= rand()%100+1)
+									maze[i][j] = 0 , mark[i][j] = 0 ;
+								else
+									maze[i][j] = 1 , mark[i][j] = 1 ;	
+							}
+							
+							maze[1][1] = 0 , maze[y-2][x-2] = 0 ,mark[1][1] = 0 , mark[y-2][x-2] = 0;				//設置起點和終點		
+						}
+				
+				d = 0, x = 1 , y = 1 ;											//值初始化
+				
+				while(y <= size[n] && x <= size[n])
+				{	
+					mark[y][x] = 1 ;
+					while(d <= 7)
+					{	
+						if(mark[y + dir[d].a][x + dir[d].b] == 0)                  //有路 
+							{
+								item temp(y, x, d+1);
+								y += dir[d].a;
+								x += dir[d].b;
+								d = 0;
+								stack.push(temp);
+								break;
+							}
+						else															//否則方向++ 
+							d++;		
+					}
+					if(y == size[n] && x == size[n])							//等於終點跳出 
+					{
+						success++;
+						break;	
+					}
+					
+					
+					if(d >= 8)
+					{
+						
+						if(stack.sizeOutput())
+						{
+							item temp = stack.pop();
+							y = temp.a;
+							x = temp.b;
+							d = temp.dir; 
+							
+						}
+						else
+							break;
+					}
+				}
+				
+			}
+			cout<<((double)success/1000)*100<<endl;
+		}
+	}
+	return 0;
+}
+
+
+
+template<class T>
+void Stack<T>::push(T x)
+{	
+	size++;
+	
+	if(First == NULL)
+	{
+		First = new StackNode<T>;
+		First -> data = x ;
+		List = First ;
+	}
+	
+	else
+	{	
+		StackNode<T> * temp = new  StackNode<T> , * current;
+		temp -> data = x ;
+		current = First;
+		First = temp ;
+		First -> link = current;
+	}	
+	
+}
+
+template<class T>
+T Stack<T>::pop()
+{
+	StackNode<T> * temp = First ;
+	
+	size--;
+	
+	if(First == NULL)
+		throw "Stack　已為空";											//若Stack早已為空則跳出一則錯誤訊息 
+	else
+	{
+		First = First -> link;
+		return temp -> data ;
+	}
+			
+}	
